@@ -1,0 +1,82 @@
+From 5f114f6c3c3eb88f567abf3526f1a4ff10369299 Mon Sep 17 00:00:00 2001
+From: Kevin Kim <ckkim@hardkernel.com>
+Date: Thu, 29 Nov 2018 18:38:05 +0900
+Subject: [PATCH] ODROID-COMMON:Add device information to /proc/cpuinfo
+
+Change-Id: I1148522b11733bfa05a1f74ecb756cf78a0b4fe4
+---
+ arch/arm64/kernel/cpuinfo.c         |  5 +++--
+ arch/arm64/kernel/setup.c           | 15 ++++++++++++++-
+ include/linux/amlogic/cpu_version.h |  3 +++
+ 3 files changed, 20 insertions(+), 3 deletions(-)
+
+diff --git a/arch/arm64/kernel/cpuinfo.c b/arch/arm64/kernel/cpuinfo.c
+index 798c0f237df46..dcc983196aa26 100644
+--- a/arch/arm64/kernel/cpuinfo.c
++++ b/arch/arm64/kernel/cpuinfo.c
+@@ -171,8 +171,9 @@ static int c_show(struct seq_file *m, void *v)
+ 		seq_printf(m, "%02x", chipid[i]);
+ 	seq_puts(m, "\n");
+ #endif
+-
+-	seq_printf(m, "Hardware\t: %s\n\n", "Amlogic");
++	system_rev = 0x0400;
++	seq_printf(m, "Hardware\t: %s\n", machine_name);
++	seq_printf(m, "Revision\t: %04x\n\n", system_rev);
+ 	return 0;
+ }
+ 
+diff --git a/arch/arm64/kernel/setup.c b/arch/arm64/kernel/setup.c
+index b5222094ab52d..552d0eb0acd0b 100644
+--- a/arch/arm64/kernel/setup.c
++++ b/arch/arm64/kernel/setup.c
+@@ -66,6 +66,12 @@
+ 
+ phys_addr_t __fdt_pointer __initdata;
+ 
++const char *machine_name;
++EXPORT_SYMBOL(machine_name);
++
++unsigned int system_rev;
++EXPORT_SYMBOL(system_rev);
++
+ /*
+  * Standard memory resources
+  */
+@@ -180,6 +186,7 @@ static void __init smp_build_mpidr_hash(void)
+ static void __init setup_machine_fdt(phys_addr_t dt_phys)
+ {
+ 	void *dt_virt = fixmap_remap_fdt(dt_phys);
++	const char *name;
+ 
+ 	if (!dt_virt || !early_init_dt_scan(dt_virt)) {
+ 		pr_crit("\n"
+@@ -192,7 +199,13 @@ static void __init setup_machine_fdt(phys_addr_t dt_phys)
+ 			cpu_relax();
+ 	}
+ 
+-	dump_stack_set_arch_desc("%s (DT)", of_flat_dt_get_machine_name());
++	name = of_flat_dt_get_machine_name();
++	if (!name)
++		return;
++	machine_name = name;
++
++	pr_info("Machine model: %s\n", name);
++	dump_stack_set_arch_desc("%s (DT)", name);
+ }
+ 
+ static void __init request_standard_resources(void)
+diff --git a/include/linux/amlogic/cpu_version.h b/include/linux/amlogic/cpu_version.h
+index b0396b0ef3b96..74eaaaa6ca8b9 100644
+--- a/include/linux/amlogic/cpu_version.h
++++ b/include/linux/amlogic/cpu_version.h
+@@ -40,6 +40,9 @@
+ #define MESON_CPU_VERSION_LVL_MISC	3
+ #define MESON_CPU_VERSION_LVL_MAX	MESON_CPU_VERSION_LVL_MISC
+ 
++extern const char *machine_name;
++extern unsigned int system_rev;
++
+ #define CHIPID_LEN 16
+ void cpuinfo_get_chipid(unsigned char *cid, unsigned int size);
+ int  meson_cpu_version_init(void);
