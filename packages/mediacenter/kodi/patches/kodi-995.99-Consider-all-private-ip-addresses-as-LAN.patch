@@ -1,0 +1,25 @@
+From 4adfd7b221662db11e38c1fedda4034da768bfa3 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Michael=20M=C3=BCller?= <michael@fds-team.de>
+Date: Mon, 30 Dec 2019 23:59:38 +0100
+Subject: Consider all private ip addresses as LAN
+
+---
+ xbmc/utils/URIUtils.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/xbmc/utils/URIUtils.h b/xbmc/utils/URIUtils.h
+index 4ba8bed55b..523fa728a2 100644
+--- a/xbmc/utils/URIUtils.h
++++ b/xbmc/utils/URIUtils.h
+@@ -134,7 +134,7 @@ public:
+   static bool IsNfs(const std::string& strFile);
+   static bool IsOnDVD(const std::string& strFile);
+   static bool IsOnLAN(const std::string& strFile);
+-  static bool IsHostOnLAN(const std::string& hostName, bool offLineCheck = false);
++  static bool IsHostOnLAN(const std::string& hostName, bool offLineCheck = true);
+   static bool IsPlugin(const std::string& strFile);
+   static bool IsScript(const std::string& strFile);
+   static bool IsRAR(const std::string& strFile);
+-- 
+2.24.1
+
